@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,4 +7,41 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  Id      Int    @id @unique @default(autoincrement())
+  address String @unique
+  tasks   Task[]
+}
 
+model Task {
+  Id          Int          @id @unique @default(autoincrement())
+  title       String       @default("select most clickable picture/thumbnail")
+  userId      Int
+  amount      String
+  options     Option[]
+  submissions Submission[]
+  user        User         @relation(fields: [userId], references: [Id])
+}
+
+model Option {
+  Id         Int          @id @unique @default(autoincrement())
+  taskId     Int
+  task       Task         @relation(fields: [taskId], references: [Id])
+  submission Submission[]
+}
+
+model Worker {
+  Id          Int          @id @unique @default(autoincrement())
+  address     String       @unique
+  submissions Submission[]
+}
+
+model Submission {
+  Id       Int    @id @unique @default(autoincrement())
+  workerId Int
+  optionId Int
+  taskId   Int
+  option   Option @relation(fields: [optionId], references: [Id])
+  task     Task   @relation(fields: [taskId], references: [Id])
+  worker   Worker @relation(fields: [workerId], references: [Id])
+}
