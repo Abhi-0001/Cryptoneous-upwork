@@ -3,6 +3,7 @@ import { getPresignedUrl, userSignIn, userSignUp } from '../controllers';
 import { authenticate } from '../middlewares/auth.middleware';
 
 
+
 const router = Router();
 
 router.post('/signin', userSignIn);

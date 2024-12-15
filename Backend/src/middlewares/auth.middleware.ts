@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 
 declare global {
@@ -10,13 +10,14 @@ declare global {
     }
 }
 
-export async function authenticate(req:Request, res: Response, next: NextFunction) {
-    const token = req.headers['authorization'].split(' ')[1];
+export async function authenticate(req:Request, res: Response, next: NextFunction):Promise<any> {
+    const token = req.headers['authorization'].split(' ').at(1);
     
     console.log("🚀🚀 token: ", token);
+    if(!token) return res.status(404).json({message: 'Unauthorized access. Sign In first.'});
     const isVerified = <{address: string}> jwt.verify(token, process.env.JWT_AUTH_TOKEN);
     if(!isVerified) res.status(404).json({message: 'Unauthorized access.'});
-
+    console.log(isVerified)
     req.address = isVerified.address;
     next();
 }
