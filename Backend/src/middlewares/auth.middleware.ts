@@ -12,7 +12,6 @@ declare global {
 
 export async function authenticate(req:Request, res: Response, next: NextFunction):Promise<any> {
     const token = req.headers['authorization'].split(' ').at(1);
-    
     console.log("🚀🚀 token: ", token);
     if(!token) return res.status(404).json({message: 'Unauthorized access. Sign In first.'});
     const isVerified = <{address: string}> jwt.verify(token, process.env.JWT_AUTH_TOKEN);
