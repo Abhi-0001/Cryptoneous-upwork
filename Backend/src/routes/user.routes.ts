@@ -1,16 +1,26 @@
-import  {Router} from 'express'
-import { getPresignedUrl, userSignIn, userSignUp } from '../controllers';
-import { authenticate } from '../middlewares/auth.middleware';
-
-
+import { Router } from "express";
+import {
+  createTask,
+  getPresignedUrl,
+  getUserAllTasks,
+  getUserTask,
+  userSignIn,
+  userSignUp,
+} from "../controllers";
+import { authenticate } from "../middlewares/auth.middleware";
 
 const router = Router();
 
-router.post('/signin', userSignIn);
+router.post("/signin", userSignIn);
 
-router.post('/signup', userSignUp); 
+router.post("/signup", userSignUp);
 
-router.get('/presigned', authenticate, getPresignedUrl);
+router.use(authenticate);
+router.get("/presigned", getPresignedUrl);
 
+router.post("/task", createTask);
 
-export {router as UserRouter}
+router.get("/task", getUserAllTasks);
+router.get("/task/:id", getUserTask);
+
+export { router as UserRouter };

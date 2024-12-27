@@ -19,12 +19,14 @@ model Task {
   userId      Int
   amount      String
   options     Option[]
+  signature   String       
   submissions Submission[]
   user        User         @relation(fields: [userId], references: [Id])
 }
 
 model Option {
   Id         Int          @id @unique @default(autoincrement())
+  image      String       
   taskId     Int
   task       Task         @relation(fields: [taskId], references: [Id])
   submission Submission[]
