@@ -17,7 +17,7 @@ model Task {
   Id          Int          @id @unique @default(autoincrement())
   title       String       @default("select most clickable picture/thumbnail")
   userId      Int
-  amount      String
+  amount      Int
   options     Option[]
   signature   String       
   submissions Submission[]
@@ -33,9 +33,11 @@ model Option {
 }
 
 model Worker {
-  Id          Int          @id @unique @default(autoincrement())
-  address     String       @unique
-  submissions Submission[]
+  Id                    Int          @id @unique @default(autoincrement())
+  address               String       @unique
+  submissions           Submission[]
+  pending_amount        Int 
+  locked_amount         Int
 }
 
 model Submission {
@@ -46,4 +48,5 @@ model Submission {
   option   Option @relation(fields: [optionId], references: [Id])
   task     Task   @relation(fields: [taskId], references: [Id])
   worker   Worker @relation(fields: [workerId], references: [Id])
+  @@unique([workerId, taskId])
 }

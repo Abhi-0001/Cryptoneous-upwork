@@ -7,7 +7,7 @@ import {
   userSignIn,
   userSignUp,
 } from "../controllers";
-import { authenticate } from "../middlewares/auth.middleware";
+import { userAuthentication } from "../middlewares/auth.middleware";
 
 const router = Router();
 
@@ -15,7 +15,8 @@ router.post("/signin", userSignIn);
 
 router.post("/signup", userSignUp);
 
-router.use(authenticate);
+router.use(userAuthentication);
+
 router.get("/presigned", getPresignedUrl);
 
 router.post("/task", createTask);
