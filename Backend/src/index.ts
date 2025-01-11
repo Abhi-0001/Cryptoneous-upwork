@@ -12,7 +12,7 @@ app.use("/api/v1/worker", WorkerRouter);
 
 console.clear();
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 8000;
 
 
 app.listen(PORT, () => {

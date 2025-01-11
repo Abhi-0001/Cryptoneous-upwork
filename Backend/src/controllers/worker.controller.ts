@@ -18,6 +18,7 @@ export async function workerSignIn(req: Request, res: Response): Promise<any> {
         address: address,
       },
     });
+
     if (!isExist)
       return res.status(404).json({ message: "please signup first." });
 
@@ -64,15 +65,11 @@ export async function nextTask(req:Request, res: Response): Promise<any> {
     const task = await getNextTask(workerId);
 
     if(!task) return res.status(404).json({message: "No more task right now. Please check after sometime"})
-    
-      
     return res.status(201).json({task});
   }catch(e){
       console.log(e.message);
       return res.status(500).json({message: e.message});
-    }
-
-  
+  }
 }
 
 export async function submitTask(req:Request, res: Response):Promise<any> {
@@ -85,11 +82,13 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
     const taskToSubmit = await prisma.task.findFirst({where: {Id: Number(parsedBody.data.taskId)}})
     const amount = (Number(taskToSubmit.amount) / TOTAL_SUBMISSION);
 
-    const submission = await prisma.$transaction(async tx => {
+    const isAlreadySubmitted = await prisma.submission.findFirst({where: {
+      taskId: Number(parsedBody.data.taskId),
+      workerId: Number(parsedBody.data.selection)
+    }})
 
-      const isAlreadySubmitted = await prisma.task.findFirst({where: {
-        
-      }})
+    if(isAlreadySubmitted) return res.status(404).json({message: `you have already submitted this task.`})
+    const submission = await prisma.$transaction(async tx => {
       const submission = await prisma.submission.create({data: {
         taskId: Number(parsedBody.data.taskId),
         optionId: Number(parsedBody.data.selection),
