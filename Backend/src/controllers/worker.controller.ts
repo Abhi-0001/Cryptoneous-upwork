@@ -51,7 +51,7 @@ export async function workerSignUp(req: Request, res: Response): Promise<any> {
       },
     });
     // generate jwt token
-    const token = jwt.sign({Id: isExist.Id, address }, process.env.JWT_AUTH_TOKEN_WORKER);
+    const token = jwt.sign({Id: worker.Id, address }, process.env.JWT_AUTH_TOKEN_WORKER);
     return res.status(200).json({ token, worker });
   } catch (err) {
     console.log(err);
@@ -80,6 +80,8 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
 
     if(!parsedBody.success) return res.status(500).json({message: 'Task is no more exist'})
     const taskToSubmit = await prisma.task.findFirst({where: {Id: Number(parsedBody.data.taskId)}})
+  
+    if(!taskToSubmit) return res.status(400).json({message: `Task does not exist with Id: ${parsedBody.data.taskId}`})
     const amount = (Number(taskToSubmit.amount) / TOTAL_SUBMISSION);
 
     const isAlreadySubmitted = await prisma.submission.findFirst({where: {
@@ -89,13 +91,13 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
 
     if(isAlreadySubmitted) return res.status(404).json({message: `you have already submitted this task.`})
     const submission = await prisma.$transaction(async tx => {
-      const submission = await prisma.submission.create({data: {
+      const submission = await tx.submission.create({data: {
         taskId: Number(parsedBody.data.taskId),
         optionId: Number(parsedBody.data.selection),
         workerId,
       }})
 
-      await prisma.worker.update({
+      await tx.worker.update({
         where: {Id: workerId},
         data: {
           pending_amount: {

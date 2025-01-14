@@ -109,6 +109,7 @@ export async function createTask(req: Request, res: Response): Promise<any> {
     
     
     const createdTask = await prisma.$transaction(async (tx) => {
+      
       const response = await tx.task.create({
         data: {
           title: parsedData.data.title,
@@ -124,8 +125,7 @@ export async function createTask(req: Request, res: Response): Promise<any> {
         }),
       });
 
-      console.log(options)
-      return {...response, ...options}
+      return {...response, amount: response.amount * TOTAL_DECIMAL_POINTS  , ...options}
     });
 
     

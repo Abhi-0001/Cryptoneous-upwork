@@ -4,25 +4,28 @@ import jwt from "jsonwebtoken";
 export async function userAuthentication(
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<any> {
-  const token = req.headers["authorization"].split(" ").at(1);
+  try{
+    const token = req.headers["authorization"].split(" ").at(1);
+    if (!token)
+      return res
+        .status(404)
+        .json({ message: "Unauthorized access. Sign In first." });
 
-
-  if (!token)
-    return res
-      .status(404)
-      .json({ message: "Unauthorized access. Sign In first." });
-
+    const isVerified = <{ address: string, Id: number }>(
+      jwt.verify(token, process.env.JWT_AUTH_TOKEN)
+    );
     
-  const isVerified = <{ address: string, Id: number }>(
-    jwt.verify(token, process.env.JWT_AUTH_TOKEN)
-  );
-  console.log(isVerified);
-  if (!isVerified) res.status(404).json({ message: "Unauthorized access." });
+    if (!isVerified) res.status(404).json({ message: "Unauthorized access." });
 
-  req.userId = isVerified.Id;
-  next();
+    req.userId = isVerified.Id;
+    next();
+
+  }catch(e){
+    console.log(e);
+    return res.status(500).json({message: e.message})
+  }
 }
 
 
@@ -31,17 +34,26 @@ export async function workerAuthentication(
   res: Response,
   next: NextFunction,
 ): Promise<any> {
-  const token = req.headers["authorization"].split(" ").at(1);
+  try{
+    const token = req.headers["authorization"].split(" ").at(1);
 
-  if (!token)
-    return res
-      .status(404)
-      .json({ message: "Unauthorized access. Sign In first." });
-  const isVerified = <{ address: string, Id: number }>(
-    jwt.verify(token, process.env.JWT_AUTH_TOKEN_WORKER)
-  );
-  if (!isVerified) res.status(404).json({ message: "Unauthorized access." });
+    
+    if (!token)
+      return res
+        .status(404)
+        .json({ message: "Unauthorized access. Sign In first." });
+    const isVerified = <{ address: string, Id: number }>(
+      jwt.verify(token, process.env.JWT_AUTH_TOKEN_WORKER)
+    );
+  
+    console.log(`🚀🚀 jwt verification ${isVerified} \n\n\n\n`)
+    if (!isVerified) res.status(404).json({ message: "Unauthorized access." });
+  
+    req.workerId = isVerified.Id;
+    next();
 
-  req.workerId = isVerified.Id;
-  next();
+  }catch(e){
+    console.log(e);
+    return res.status(500).json({message: e.message})
+  }
 }
