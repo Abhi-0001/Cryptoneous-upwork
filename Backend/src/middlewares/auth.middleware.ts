@@ -46,7 +46,6 @@ export async function workerAuthentication(
       jwt.verify(token, process.env.JWT_AUTH_TOKEN_WORKER)
     );
   
-    console.log(`🚀🚀 jwt verification ${isVerified} \n\n\n\n`)
     if (!isVerified) res.status(404).json({ message: "Unauthorized access." });
   
     req.workerId = isVerified.Id;

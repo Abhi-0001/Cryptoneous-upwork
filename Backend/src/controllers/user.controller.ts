@@ -98,8 +98,6 @@ export async function createTask(req: Request, res: Response): Promise<any> {
 
     const parsedData = createTaskInput.safeParse(body);
   
-    
-
     if (!parsedData.success)
       throw new Error("Wrong Input, please provide valid request body");
 
@@ -107,13 +105,11 @@ export async function createTask(req: Request, res: Response): Promise<any> {
 
     // create task after succefull payment
     
-    
     const createdTask = await prisma.$transaction(async (tx) => {
-      
       const response = await tx.task.create({
         data: {
           title: parsedData.data.title,
-          amount: (parsedData.data.amount/TOTAL_DECIMAL_POINTS),
+          amount: (parsedData.data.amount * TOTAL_DECIMAL_POINTS),
           userId: req.userId,
           signature: parsedData.data.signature
         },
@@ -125,9 +121,8 @@ export async function createTask(req: Request, res: Response): Promise<any> {
         }),
       });
 
-      return {...response, amount: response.amount * TOTAL_DECIMAL_POINTS  , ...options}
+      return {...response, amount: response.amount / TOTAL_DECIMAL_POINTS  , ...options}
     });
-
     
     return res.status(201).json({ task: createdTask });
   } catch (err) {

@@ -10,6 +10,6 @@ export async function getNextTask(workerId: number) {
           }
         }
       }, select: {
-        title: true, options: true, amount: true
+        title: true, options: true, amount: true, Id: true
       }})
 }

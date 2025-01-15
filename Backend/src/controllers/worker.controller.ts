@@ -7,7 +7,11 @@ import { getNextTask } from '../db/getters';
 const prisma = new PrismaClient();
 
 export const TOTAL_SUBMISSION = 100;
-export const TOTAL_DECIMAL_POINTS = 1000_1000_000
+export const TOTAL_DECIMAL_POINTS = 1000_1000
+
+export function wrapTask(task){
+  return {...task, amount: task.amount * TOTAL_DECIMAL_POINTS}
+}
 
 export async function workerSignIn(req: Request, res: Response): Promise<any> {
   try {
@@ -65,7 +69,7 @@ export async function nextTask(req:Request, res: Response): Promise<any> {
     const task = await getNextTask(workerId);
 
     if(!task) return res.status(404).json({message: "No more task right now. Please check after sometime"})
-    return res.status(201).json({task});
+    return res.status(201).json({task: wrapTask(task)});
   }catch(e){
       console.log(e.message);
       return res.status(500).json({message: e.message});
@@ -90,6 +94,7 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
     }})
 
     if(isAlreadySubmitted) return res.status(404).json({message: `you have already submitted this task.`})
+
     const submission = await prisma.$transaction(async tx => {
       const submission = await tx.submission.create({data: {
         taskId: Number(parsedBody.data.taskId),
@@ -115,5 +120,19 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
   }catch(e){
     console.log(e.message)
     return res.status(500).json(`Error: ${e.message}`)
+  }
+}
+
+export async function getWorkerProfile(req:Request, res: Response):Promise<any> {
+  try{
+    const workerId = req.workerId;
+    const worker = await prisma.worker.findFirst({where: {
+      Id: workerId
+    }})
+    const profile = {...worker, pending_amount: worker.pending_amount/TOTAL_DECIMAL_POINTS, locked_amount: worker.locked_amount/TOTAL_DECIMAL_POINTS}
+    return res.status(200).json({profile})
+  }catch(e){
+    console.log(e);
+    return res.status(500).json({message: e.message})
   }
 }

@@ -1,5 +1,5 @@
 import Router from "express";
-import { nextTask, submitTask, workerSignIn, workerSignUp } from "../controllers";
+import { getWorkerProfile, nextTask, submitTask, workerSignIn, workerSignUp } from "../controllers";
 import { workerAuthentication } from "../middlewares/auth.middleware";
 
 const router = Router();
@@ -11,8 +11,9 @@ router.post("/signup", workerSignUp);
 
 router.use(workerAuthentication);
 
-router.get('/nextTask', nextTask);
 
-router.post('/submission', submitTask)
+router.get('/profile', getWorkerProfile);
+router.get('/nextTask', nextTask);
+router.post('/submission', submitTask);
 
 export { router as WorkerRouter };
