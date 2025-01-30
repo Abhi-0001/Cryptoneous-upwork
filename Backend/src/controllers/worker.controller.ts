@@ -95,7 +95,11 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
 
     if(isAlreadySubmitted) return res.status(404).json({message: `you have already submitted this task.`})
 
+    const doesOptionExist = await prisma.option.findFirst({where: {Id: Number(parsedBody.data.selection), taskId: Number(parsedBody.data.taskId)}})
+
+    if(!doesOptionExist) return res.status(400).json({message: "Please select valid option"}) ;
     const submission = await prisma.$transaction(async tx => {
+     
       const submission = await tx.submission.create({data: {
         taskId: Number(parsedBody.data.taskId),
         optionId: Number(parsedBody.data.selection),
@@ -113,7 +117,7 @@ export async function submitTask(req:Request, res: Response):Promise<any> {
       return submission;
     })
 
-    if(!submission) return res.status(500).json({message: `Result couldn't be submitted. Please retry after some time.`})
+    if(!submission) return res.status(500).json({message: `Task couldn't be submitted.`})
     
     const nextTask = await getNextTask(workerId);
     return res.status(200).json({message: "Task submitted succesfully." , nextTask});
@@ -129,10 +133,60 @@ export async function getWorkerProfile(req:Request, res: Response):Promise<any> 
     const worker = await prisma.worker.findFirst({where: {
       Id: workerId
     }})
-    const profile = {...worker, pending_amount: worker.pending_amount/TOTAL_DECIMAL_POINTS, locked_amount: worker.locked_amount/TOTAL_DECIMAL_POINTS}
+
+    const pendingAmount = worker.pending_amount/TOTAL_DECIMAL_POINTS;
+    const lockedAmount = worker.locked_amount/TOTAL_DECIMAL_POINTS;
+    const profile = {...worker, pending_amount: pendingAmount, locked_amount:lockedAmount}
     return res.status(200).json({profile})
   }catch(e){
     console.log(e);
     return res.status(500).json({message: e.message})
   }
+}
+
+export async function submitPayout(req:Request, res: Response): Promise<any> {
+    const userId = req.userId;
+    const workerId = req.workerId;
+
+    if(userId){
+
+    }else{
+      const worker = await prisma.worker.findFirst({where: {Id: workerId}})
+
+      const txnId = "0x23432";
+      const amount = worker.pending_amount;
+      const pendingAmount = worker.pending_amount/TOTAL_DECIMAL_POINTS;
+      const lockedAmount = worker.locked_amount/TOTAL_DECIMAL_POINTS;
+
+      if(amount <= 0) 
+        return res.status(300).json({message: "No funds to withdraw.",
+                                  pending_amount: pendingAmount, 
+                                  locked_amount: lockedAmount })  
+
+      const payout = await prisma.$transaction(async tx => {
+        await tx.worker.update({
+          where: {Id: workerId},
+          data: {
+            pending_amount: {
+              decrement: amount
+            },
+            locked_amount: {
+              increment: amount
+            }
+          }
+        })
+        const payoutStatus = await tx.payouts.create({
+          data: {
+            workerId,
+            amount,
+            signature: txnId,
+            status: "Processing"
+          }
+        })
+        return payoutStatus;
+      })
+      if(!payout) return res.status(500).json({message: "Internal server error. Retry after sometime"})
+      // send to amount to solana blockchain.
+      return res.status(201).json({message: "Processing your payout", amount: pendingAmount})
+    }
 }

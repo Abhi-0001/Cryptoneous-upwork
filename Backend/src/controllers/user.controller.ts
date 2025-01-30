@@ -121,7 +121,8 @@ export async function createTask(req: Request, res: Response): Promise<any> {
         }),
       });
 
-      return {...response, amount: response.amount / TOTAL_DECIMAL_POINTS  , ...options}
+      const originalAmount = (response.amount / TOTAL_DECIMAL_POINTS).toFixed(4)
+      return {...response, amount: originalAmount  , ...options}
     });
     
     return res.status(201).json({ task: createdTask });
@@ -168,10 +169,11 @@ export async function getUserTask(req: Request, res: Response): Promise<any> {
     }, select : {
       title: true, options: true, amount: true
     }})
+
     if (!task)
       return res.status(211).json({ message: "No task exist with this ID." });
 
-    return res.status(201).json({ task });
+    return res.status(201).json({ task })
   } catch (err) {
     console.log(err);
     return res
