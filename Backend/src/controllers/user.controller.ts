@@ -21,7 +21,10 @@ export async function userSignIn(req: Request, res: Response): Promise<any> {
       return res.status(404).json({ message: "please signup first." });
 
     // generate jwt token
-    const token = jwt.sign({Id: isExist.Id, address }, process.env.JWT_AUTH_TOKEN);
+    const token = jwt.sign(
+      { Id: isExist.Id, address },
+      process.env.JWT_AUTH_TOKEN,
+    );
     return res.status(200).json({ token });
   } catch (err) {
     console.log(err);
@@ -31,6 +34,7 @@ export async function userSignIn(req: Request, res: Response): Promise<any> {
 
 export async function userSignUp(req: Request, res: Response): Promise<any> {
   try {
+    console.log("reached");
     const { address } = req.body;
     const isExist = await prisma.user.findUnique({
       where: { address },
@@ -48,7 +52,10 @@ export async function userSignUp(req: Request, res: Response): Promise<any> {
     });
     console.log(user);
     // generate jwt token
-    const token = jwt.sign({Id: user.Id, address }, process.env.JWT_AUTH_TOKEN);
+    const token = jwt.sign(
+      { Id: user.Id, address },
+      process.env.JWT_AUTH_TOKEN,
+    );
     return res.status(200).json({ token, user });
   } catch (err) {
     console.log(err);
@@ -62,7 +69,6 @@ export async function getPresignedUrl(
 ): Promise<any> {
   try {
     const userId = req.userId;
-    
 
     const s3Credentials = {
       accessKeyId: process.env.S3_ACCESS_KEY,
@@ -97,21 +103,21 @@ export async function createTask(req: Request, res: Response): Promise<any> {
     const body = req.body;
 
     const parsedData = createTaskInput.safeParse(body);
-  
+
     if (!parsedData.success)
       throw new Error("Wrong Input, please provide valid request body");
 
     // verify the passed signature by the user either payment is succefull or not
 
     // create task after succefull payment
-    
+
     const createdTask = await prisma.$transaction(async (tx) => {
       const response = await tx.task.create({
         data: {
           title: parsedData.data.title,
-          amount: (parsedData.data.amount * TOTAL_DECIMAL_POINTS),
+          amount: parsedData.data.amount * TOTAL_DECIMAL_POINTS,
           userId: req.userId,
-          signature: parsedData.data.signature
+          signature: parsedData.data.signature,
         },
       });
 
@@ -121,10 +127,12 @@ export async function createTask(req: Request, res: Response): Promise<any> {
         }),
       });
 
-      const originalAmount = (response.amount / TOTAL_DECIMAL_POINTS).toFixed(4)
-      return {...response, amount: originalAmount  , ...options}
+      const originalAmount = (response.amount / TOTAL_DECIMAL_POINTS).toFixed(
+        4,
+      );
+      return { ...response, amount: originalAmount, ...options };
     });
-    
+
     return res.status(201).json({ task: createdTask });
   } catch (err) {
     console.log(err);
@@ -145,8 +153,10 @@ export async function getUserAllTasks(
         userId: userId,
       },
       select: {
-        title: true, options: true, amount: true
-      }
+        title: true,
+        options: true,
+        amount: true,
+      },
     });
 
     return res.status(201).json({ tasks });
@@ -163,17 +173,22 @@ export async function getUserTask(req: Request, res: Response): Promise<any> {
     const taskId = req.params.id;
     const userId = req.userId;
 
-    const task = await prisma.task.findUnique({where: {
-      Id: Number(taskId), 
-      userId
-    }, select : {
-      title: true, options: true, amount: true
-    }})
+    const task = await prisma.task.findUnique({
+      where: {
+        Id: Number(taskId),
+        userId,
+      },
+      select: {
+        title: true,
+        options: true,
+        amount: true,
+      },
+    });
 
     if (!task)
       return res.status(211).json({ message: "No task exist with this ID." });
 
-    return res.status(201).json({ task })
+    return res.status(201).json({ task });
   } catch (err) {
     console.log(err);
     return res

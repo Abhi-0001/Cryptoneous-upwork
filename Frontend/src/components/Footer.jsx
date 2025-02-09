@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
-    <div className="">
-
-    </div>
+    <footer className="">
+      &copy; Copyright published
+    </footer>
   )
 }
