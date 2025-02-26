@@ -2,10 +2,11 @@ import axios from "axios";
 
 export async function signInUp({ address }) {
   try {
-    const res = await axios.post(`${BASE_URL}/${role}/${logOrSign}`, {
+    // console.log(address, role, logOrSign);
+    const res = await axios.post(`${BASE_URL}/user/signin`, {
       address,
     });
-    console.log(res.data);
+    console.log(res);
     return { message: res.data.message, ...res.data };
   } catch (err) {
     console.log(err.response.data.message);

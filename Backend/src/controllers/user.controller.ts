@@ -14,7 +14,7 @@ export async function userSignIn(req: Request, res: Response): Promise<any> {
 
     const isExist = await prisma.user.findUnique({
       where: {
-        address: address,
+        address,
       },
     });
     if (!isExist)
