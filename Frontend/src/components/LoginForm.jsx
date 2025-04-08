@@ -1,22 +1,40 @@
 import React, { useState } from "react";
+
 import Button from "../ui/Button";
 import Input from "../ui/Input";
-import axios from "axios";
-import { BASE_URL } from "../constants";
 import { useAuth } from "../contexts/AuthProvider";
-import { useNavigate } from "react-router-dom";
+
+function RadioButton({onClickHandler, defaultChecked, id, name }){
+  return <div className="cursor-pointer flex flex-col items-center justify-center">
+  <input
+    type="radio"
+    onClick={onClickHandler}
+    id={id}
+    name={name}
+    defaultChecked={defaultChecked}
+    className="accent-blue-700 cursor-pointer hover:accent-blue-600"
+  />
+  <label className="cursor-pointer text-xs" htmlFor={id}>
+    {id.toUpperCase()}
+  </label>
+</div>
+}
 
 function LoginForm() {
   const [address, setAddress] = useState("");
   const [logOrSign, setLogOrSign] = useState("signin");
-  const [role, setRole] = useState("user");
+  
+  const [error, setError] = useState('');
 
   // context
-  const { handleLogin, isLoading } = useAuth();
+  const { handleLogin, isLoading, role, setRole } = useAuth();
 
   async function handleSubmit(e) {
     e.preventDefault();
-    await handleLogin({ address, role, logOrSign });
+    console.log('inside handleSubmit');
+    const res = await handleLogin({ address, role, logOrSign });
+    console.log(res);
+    if(res?.error?.length > 0) setError(res.error);
   }
 
   return (
@@ -26,36 +44,10 @@ function LoginForm() {
         className="flex flex-col gap-4 items-center justify-center p-8 w-[75%]"
       >
         <div className="flex items-center justify-between w-[50%]">
-          <div className="cursor-pointer flex flex-col items-center justify-center">
-            <input
-              type="radio"
-              onClick={() => setRole("user")}
-              id="user"
-              name="role"
-              className="accent-blue-700 cursor-pointer hover:accent-blue-600"
-              defaultChecked={role === "user"}
-            />
-            <label className="cursor-pointer" htmlFor="user">
-              User
-            </label>
-          </div>
-
-          <div className="cursor-pointer flex flex-col items-center justify-center">
-            <input
-              type="radio"
-              onClick={() => setRole("worker")}
-              id="worker"
-              name="role"
-              defaultChecked={role === "worker"}
-              className="accent-blue-700 cursor-pointer hover:accent-blue-600"
-            />
-            <label className="cursor-pointer" htmlFor="worker">
-              Worker
-            </label>
-          </div>
+          <RadioButton onClickHandler={() => setRole('user')} id={'user'} name={'role'} defaultChecked={role=='user'} />
+          <RadioButton onClickHandler={() => setRole('worker')} id={'worker'} name={'role'} defaultChecked={role=='worker'} />
         </div>
         <Input
-          type="text"
           placeholder="address"
           styles=""
           onChangeHandler={(e) => setAddress(e.target.value)}
@@ -88,6 +80,9 @@ function LoginForm() {
           >
             {logOrSign === "signin" ? "sign up" : "sign in"}
           </button>{" "}
+        </p>
+        <p className="text-red-500 font-semibold">
+            {error.length > 0 && error}
         </p>
       </form>
     </div>

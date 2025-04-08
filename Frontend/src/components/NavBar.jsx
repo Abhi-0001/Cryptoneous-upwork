@@ -1,12 +1,12 @@
-import { NavLink } from "react-router-dom";
-import { HiMiniUserCircle } from "react-icons/hi2";
-
 import Button from "../ui/Button";
+import { HiMiniUserCircle } from "react-icons/hi2";
+import { NavLink } from "react-router-dom";
 import { useAuth } from "../contexts/AuthProvider";
 
 export default function NavBar() {
   const { isLoggedIn, handleLogout } = useAuth();
 
+  
   return (
     <nav className="flex flex-wrap justify-between lg:w-[100%] px-4 py-2">
       <div>

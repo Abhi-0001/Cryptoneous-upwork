@@ -1,32 +1,37 @@
-import axios from "axios";
 import React, { createContext, useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
+
 import { BASE_URL } from "../constants";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext();
 
 function AuthProvider({ children }) {
   const [token, setToken] = useState(localStorage.getItem("token"));
-  const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("login"));
+  const [isLoggedIn, setIsLoggedIn] = useState(JSON.parse(localStorage.getItem("login")));
   const [isLoading, setIsLoading] = useState(false);
+  const [role, setRole] = useState('user');
   const navigate = useNavigate();
 
   async function handleLogin({ address, role, logOrSign }) {
     try {
       setIsLoading(true);
-      console.log(address);
+      
       const res = await axios.post(`${BASE_URL}/${role}/${logOrSign}`, {
         address,
       });
+      
       console.log(res);
-      const token = res.data.token;
+      const token = res?.data.token;
       setToken(token);
       setIsLoggedIn(true);
       localStorage.setItem("token", token);
       localStorage.setItem("login", true);
-      navigate(`/${role}/task`);
+      
+      return {message: res?.data.message};
     } catch (e) {
-      console.error(e.response.data.message, "🚀🚀");
+      console.error(e, "🚀🚀");
+      return {error: e.message};
     } finally {
       setIsLoading(false);
     }
@@ -36,6 +41,7 @@ function AuthProvider({ children }) {
     setIsLoggedIn(false);
     localStorage.setItem("token", "");
     localStorage.setItem("login", false);
+    navigate('/');
   }
   return (
     <AuthContext.Provider
@@ -47,6 +53,8 @@ function AuthProvider({ children }) {
         handleLogin,
         handleLogout,
         isLoading,
+        role, 
+        setRole
       }}
     >
       {children}
